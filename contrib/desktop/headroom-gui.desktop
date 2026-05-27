@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Headroom
+GenericName=Audio Loudness Control
+Comment=automatic loudness and per-app volume control (pipewire)
+# @bindir@ rewritten to this build's bin dir at install time (headroom-gui nix package)
+Exec=@bindir@/headroom-gui
+# no icon shipped yet; stock freedesktop name
+Icon=multimedia-volume-control
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+Keywords=audio;volume;loudness;pipewire;normalization;compressor;limiter;
+StartupNotify=true

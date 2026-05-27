@@ -1,0 +1,33 @@
+[Unit]
+Description=automatic loudness and per-app volume control (pipewire)
+Documentation=https://github.com/manic-systems/headroom
+# pipewire is a hard dep — can't start before pw-mainloop. ConditionUser pins user-scope
+After=pipewire.service pipewire-pulse.service wireplumber.service
+Requires=pipewire.service
+Wants=wireplumber.service
+# anchor to the graphical session (PartOf → stop/restart with it).
+# pipewire.service is socket-activated with no stable session lifecycle to anchor to
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionUser=!@system
+
+[Service]
+Type=simple
+ExecStart=@bindir@/headroom daemon
+# restart on failure, not too aggressively (crash loop clobbers routing)
+Restart=on-failure
+RestartSec=2s
+# sigterm is the clean shutdown path; explicit for clarity
+KillMode=control-group
+TimeoutStopSec=5s
+# logs to journald (journalctl --user -u headroom)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=headroom
+# rt hint for the main thread; LimitRTPRIO matches the pipewire user unit
+LimitRTPRIO=20
+LimitRTTIME=200000
+LimitNICE=-11
+
+[Install]
+WantedBy=graphical-session.target
