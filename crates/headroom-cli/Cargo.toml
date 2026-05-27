@@ -1,0 +1,37 @@
+[package]
+name = "headroom-cli"
+description = "automatic loudness and per-app volume control (pipewire)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "headroom"
+path = "src/main.rs"
+
+[dependencies]
+headroom-client = { workspace = true }
+headroom-core   = { workspace = true }
+headroom-ipc    = { workspace = true }
+
+assert_no_alloc = { workspace = true }
+clap = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# tui-only deps, behind the default `tui` feature. `--no-default-features`
+# drops ratatui/crossterm for a graphics-free daemon + cli build.
+crossbeam-channel = { workspace = true, optional = true }
+crossterm = { workspace = true, optional = true }
+ratatui = { workspace = true, optional = true }
+
+[features]
+default = ["tui"]
+# full-screen `headroom monitor` tui. without it, `monitor --json` still
+# works (daemon + every other subcommand unaffected).
+tui = ["dep:crossbeam-channel", "dep:crossterm", "dep:ratatui"]

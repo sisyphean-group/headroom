@@ -1,0 +1,51 @@
+[package]
+name = "headroom-gui"
+version.workspace = true
+# optional, additive crate: pulls iced's gpu/system-lib stack (wgpu,
+# cosmic-text, winit), *not* part of the graphics-free daemon/cli build.
+# build from the nix dev shell or the `headroom-gui` nix package; both
+# supply iced's system libs.
+edition = "2021"
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "headroom-gui"
+path = "src/main.rs"
+
+[dependencies]
+# internal — same control-plane client/types the ratatui tui uses.
+headroom-client = { workspace = true }
+headroom-ipc    = { workspace = true }
+
+# iced ui, trimmed feature set on purpose:
+#  - default-features off drops `linux-theme-detection` (pulls zbus +
+#    async-process + async-io just to probe the desktop theme — we
+#    hardcode dark), plus `web-colors` / `crisp` cosmetics.
+#  - `wgpu` + `tiny-skia` (software fallback) renderers, `wayland` only.
+#  - `smol` backs the `time::every` timer (no `tokio`); `thread-pool` is
+#    the subscription executor.
+# net: ~199 crates vs gpui-component's ~525 (no av1 encoder, no http stack).
+#
+# x11 off: add iced's `"x11"` feature here (and the x11 client libs back
+# to `guiLibs` in flake.nix) to build the x11 backend.
+iced = { version = "0.14", default-features = false, features = [
+    "wgpu",
+    "tiny-skia",
+    "wayland",
+    "thread-pool",
+    "smol",
+] }
+
+# bridge: reader thread → ui channel.
+crossbeam-channel = { workspace = true }
+
+# json event decoding (mirrors the tui's `apply_event`).
+serde_json = { workspace = true }
+
+# errors / logging.
+anyhow             = "1.0"
+tracing            = { workspace = true }
+tracing-subscriber = { workspace = true }
