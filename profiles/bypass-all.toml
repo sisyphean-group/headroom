@@ -1,0 +1,23 @@
+name = "bypass-all"
+description = "Kill switch. Everything routes to the bypass sink; limiter stands by."
+
+[agc]
+enabled = false
+
+[compressor]
+enabled = false
+
+[limiter]
+# fail-safe in case a stream lands on the processed sink anyway
+ceiling_dbtp = -0.1
+lookahead_ms = 2.0
+release_ms = 80.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+[meters]
+publish_hz = 10.0
+
+[default_route]
+route = "bypass"

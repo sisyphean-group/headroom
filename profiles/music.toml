@@ -1,0 +1,68 @@
+name = "music"
+description = "Inter-track loudness leveling for music players. Even volume, dynamics mostly preserved."
+
+# slow agc to a music target; long envelopes, leans on program loudness not transients
+[agc]
+enabled = true
+target_lufs = -16.0
+attack_ms = 3000.0
+release_ms = 1500.0
+silence_threshold_lufs = -70.0
+max_boost_db = 12.0
+max_cut_db = 12.0
+
+# very light soft-knee rms; glue not compression
+[compressor]
+enabled = true
+detector = "rms"
+threshold_db = -22.0
+ratio = 1.5
+knee_db = 10.0
+attack_ms = 20.0
+release_ms = 300.0
+makeup_db = "auto"
+rms_window_ms = 50.0
+
+[limiter]
+ceiling_dbtp = -0.3
+lookahead_ms = 2.0
+release_ms = 100.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+# wide psr cap preserves dynamics; soft tier only catches the rare hot track
+[limiter.soft]
+max_psr_db = 16.0
+static_ceiling_dbtp = -5.0
+attack_ms = 6.0
+release_ms = 250.0
+
+[meters]
+publish_hz = 20.0
+
+# music players processed here (default/night bypass them) — else nothing to act on
+[[rules]]
+match = { process_binary = [
+    "spotify",
+    "mpv",
+    "vlc",
+    "strawberry",
+    "rhythmbox",
+    "clementine",
+    "audacious",
+    "mpd",
+] }
+route = "processed"
+
+# daws bypass — trusted to set their own gain
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+[[rules]]
+match = { media_role = ["Music"] }
+route = "processed"
+
+[default_route]
+route = "processed"

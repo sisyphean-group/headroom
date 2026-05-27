@@ -1,0 +1,69 @@
+name = "gaming"
+description = "Latency-first: games bypass the bus, voice chat is processed, notifications tamed per-app."
+
+# dsp here governs the comms path (voice chat) — the only thing on the bus.
+# speech-like leveling
+[agc]
+enabled = true
+target_lufs = -16.0
+attack_ms = 600.0
+release_ms = 200.0
+silence_threshold_lufs = -65.0
+max_boost_db = 20.0
+max_cut_db = 6.0
+
+[compressor]
+enabled = true
+detector = "peak"
+threshold_db = -22.0
+ratio = 3.0
+knee_db = 4.0
+attack_ms = 3.0
+release_ms = 50.0
+makeup_db = "auto"
+
+[limiter]
+ceiling_dbtp = -0.3
+lookahead_ms = 2.0
+release_ms = 50.0
+hold_ms = 3.0
+oversample = 4
+link = "stereo"
+
+[limiter.soft]
+max_psr_db = 10.0
+static_ceiling_dbtp = -8.0
+attack_ms = 2.0
+release_ms = 100.0
+
+[meters]
+publish_hz = 20.0
+
+# voice chat processed
+[[rules]]
+match = { process_binary = ["Discord", "discord", "element-desktop", "Slack", "zoom", "WEBRTC VoiceEngine", "mumble", "TeamSpeak"] }
+route = "processed"
+
+# everything else (incl. the game) bypasses → zero added latency
+[default_route]
+route = "bypass"
+
+# layer a tames notification blasts + evens chat via channelVolumes,
+# zero signal-path latency — rides on top of the bypass-routed audio
+[per_app]
+enabled = true
+default_enabled = false
+
+[[per_app.rules]]
+match = { process_binary = ["Discord", "discord", "element-desktop", "Slack", "zoom", "mumble", "TeamSpeak"] }
+enabled = true
+peak_threshold_db = -6.0
+rms_target_db = -18.0
+max_cut_db = 12.0
+peak_attack_ms = 5.0
+peak_release_ms = 400.0
+
+# never level game or music — they own their mix
+[[per_app.rules]]
+match = { process_binary = ["spotify", "mpv", "vlc"] }
+enabled = false

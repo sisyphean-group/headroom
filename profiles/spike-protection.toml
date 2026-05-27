@@ -1,0 +1,38 @@
+name = "spike-protection"
+description = "Minimal processing until a high threshold. Untouched audio, hard guard against sudden blasts."
+
+# no leveling; only catches sudden jarring level jumps (autoplay ads, stingers)
+[agc]
+enabled = false
+
+# fast high-threshold peak catch: <-6 dBFS passes 1:1, spikes clamped hard (10:1).
+# makeup_db=0 — never raise the floor, normal material untouched
+[compressor]
+enabled = true
+detector = "peak"
+threshold_db = -6.0
+ratio = 10.0
+knee_db = 2.0
+attack_ms = 1.0
+release_ms = 120.0
+makeup_db = 0.0
+
+# brickwall safety net just below 0 dBTP. no soft tier — only stop a true over
+[limiter]
+ceiling_dbtp = -0.5
+lookahead_ms = 2.0
+release_ms = 80.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+[meters]
+publish_hz = 20.0
+
+# production/creative tools bypass regardless
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+[default_route]
+route = "processed"

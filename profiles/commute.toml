@@ -1,0 +1,49 @@
+name = "commute"
+description = "Listening in noise (earbuds/transit): heavy normalization and boost, kept loud."
+
+# inverse of night: big boost, small cut — drag quiet passages up over noise
+[agc]
+enabled = true
+target_lufs = -16.0
+attack_ms = 800.0
+release_ms = 300.0
+silence_threshold_lufs = -65.0
+max_boost_db = 20.0
+max_cut_db = 6.0
+
+# firm peak compression, intelligibility over fidelity
+[compressor]
+enabled = true
+detector = "peak"
+threshold_db = -22.0
+ratio = 4.0
+knee_db = 4.0
+attack_ms = 5.0
+release_ms = 80.0
+makeup_db = "auto"
+
+# hot ceiling — stay above traffic, not be quiet
+[limiter]
+ceiling_dbtp = -0.3
+lookahead_ms = 2.0
+release_ms = 60.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+# tight psr cap so nothing ducks below the noise floor
+[limiter.soft]
+max_psr_db = 8.0
+static_ceiling_dbtp = -8.0
+attack_ms = 3.0
+release_ms = 120.0
+
+[meters]
+publish_hz = 20.0
+
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+[default_route]
+route = "processed"

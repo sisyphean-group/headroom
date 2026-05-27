@@ -1,0 +1,54 @@
+name = "podcast"
+description = "Spoken-word playback (podcasts/audiobooks): even narration loudness, smooth and unfatiguing."
+
+# one-way narration (cf. speech = fast duplex voip): moderate agc, steady loudness
+[agc]
+enabled = true
+target_lufs = -16.0
+attack_ms = 1000.0
+release_ms = 600.0
+silence_threshold_lufs = -65.0
+max_boost_db = 18.0
+max_cut_db = 6.0
+
+# rms with slower release than speech — smooth even narration
+[compressor]
+enabled = true
+detector = "rms"
+threshold_db = -24.0
+ratio = 3.0
+knee_db = 6.0
+attack_ms = 15.0
+release_ms = 200.0
+makeup_db = "auto"
+rms_window_ms = 120.0
+
+[limiter]
+ceiling_dbtp = -0.5
+lookahead_ms = 2.0
+release_ms = 60.0
+hold_ms = 4.0
+oversample = 4
+link = "stereo"
+
+# moderate psr cap: tames plosives/laughter without squashing speech
+[limiter.soft]
+max_psr_db = 10.0
+static_ceiling_dbtp = -8.0
+attack_ms = 3.0
+release_ms = 150.0
+
+[meters]
+publish_hz = 20.0
+
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+# podcast/audiobook playback rides browser or media players
+[[rules]]
+match = { process_binary = ["mpv", "vlc", "firefox", "chromium", "google-chrome"] }
+route = "processed"
+
+[default_route]
+route = "processed"

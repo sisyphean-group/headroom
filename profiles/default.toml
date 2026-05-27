@@ -1,0 +1,62 @@
+name = "default"
+description = "Gentle transparent processing for everyday use."
+
+[agc]
+enabled = true
+target_lufs = -18.0
+attack_ms = 2000.0
+release_ms = 800.0
+silence_threshold_lufs = -70.0
+max_boost_db = 12.0
+max_cut_db = 12.0
+
+[compressor]
+enabled = true
+detector = "peak"
+threshold_db = -24.0
+ratio = 2.5
+knee_db = 6.0
+attack_ms = 10.0
+release_ms = 100.0
+makeup_db = "auto"
+
+[limiter]
+ceiling_dbtp = -0.1
+lookahead_ms = 2.0
+release_ms = 80.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+# soft tier: caps crest at program_lufs + max_psr_db. omit for pure brickwall
+[limiter.soft]
+max_psr_db = 14.0
+static_ceiling_dbtp = -6.0
+attack_ms = 5.0
+release_ms = 200.0
+
+[meters]
+publish_hz = 20.0
+
+# music players + daws bypass the processor
+[[rules]]
+match = { process_binary = ["spotify", "mpv", "vlc", "ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+# browsers + voice chat processed
+[[rules]]
+match = { process_binary = [
+    "firefox",
+    "chromium",
+    "google-chrome",
+    "Discord",
+    "discord",
+    "element-desktop",
+    "Slack",
+    "zoom",
+    "WEBRTC VoiceEngine",
+] }
+route = "processed"
+
+[default_route]
+route = "processed"

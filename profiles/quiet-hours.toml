@@ -1,0 +1,49 @@
+name = "quiet-hours"
+description = "More aggressive than night: very low ceiling and narrow dynamics for sleeping households."
+
+# pulls everything to a low target with a fast loop so nothing escapes upward
+[agc]
+enabled = true
+target_lufs = -24.0
+attack_ms = 800.0
+release_ms = 350.0
+silence_threshold_lufs = -70.0
+max_boost_db = 20.0
+max_cut_db = 6.0
+
+# hard fast peak compression so a sudden effect can't carry next door
+[compressor]
+enabled = true
+detector = "peak"
+threshold_db = -30.0
+ratio = 6.0
+knee_db = 8.0
+attack_ms = 4.0
+release_ms = 50.0
+makeup_db = "auto"
+
+# drastically reduced ceiling — the defining knob; even a true over stays low
+[limiter]
+ceiling_dbtp = -6.0
+lookahead_ms = 3.0
+release_ms = 60.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+# extremely tight psr cap (~5 dB crest) — transients flattened
+[limiter.soft]
+max_psr_db = 5.0
+static_ceiling_dbtp = -14.0
+attack_ms = 2.0
+release_ms = 120.0
+
+[meters]
+publish_hz = 20.0
+
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+[default_route]
+route = "processed"

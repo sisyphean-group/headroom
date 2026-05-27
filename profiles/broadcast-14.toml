@@ -1,0 +1,49 @@
+name = "broadcast-14"
+description = "Normalizes everything to -14 LUFS (streaming-platform loudness) so all sources match."
+
+# -14 lufs = streaming-platform normalized target; everything sits at one loudness
+[agc]
+enabled = true
+target_lufs = -14.0
+attack_ms = 2500.0
+release_ms = 1000.0
+silence_threshold_lufs = -70.0
+max_boost_db = 12.0
+max_cut_db = 12.0
+
+# light rms glue to hold the target
+[compressor]
+enabled = true
+detector = "rms"
+threshold_db = -22.0
+ratio = 2.0
+knee_db = 8.0
+attack_ms = 20.0
+release_ms = 250.0
+makeup_db = "auto"
+rms_window_ms = 100.0
+
+# -1 dBTP ceiling (ebu r128 / streaming convention)
+[limiter]
+ceiling_dbtp = -1.0
+lookahead_ms = 3.0
+release_ms = 100.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+
+[limiter.soft]
+max_psr_db = 16.0
+static_ceiling_dbtp = -6.0
+attack_ms = 6.0
+release_ms = 200.0
+
+[meters]
+publish_hz = 20.0
+
+[[rules]]
+match = { process_binary = ["ardour", "reaper", "qpwgraph", "carla", "bitwig-studio"] }
+route = "bypass"
+
+[default_route]
+route = "processed"

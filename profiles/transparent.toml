@@ -1,0 +1,23 @@
+name = "transparent"
+description = "Limiter only. Compressor and AGC bypassed; the safety net."
+
+[agc]
+enabled = false
+
+[compressor]
+enabled = false
+
+[limiter]
+ceiling_dbtp = -0.1
+lookahead_ms = 2.0
+release_ms = 80.0
+hold_ms = 5.0
+oversample = 4
+link = "stereo"
+# no soft tier — pure brickwall: under -0.1 dBTP passes untouched, transients can hit ceiling
+
+[meters]
+publish_hz = 20.0
+
+[default_route]
+route = "processed"
