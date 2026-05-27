@@ -1,0 +1,24 @@
+[package]
+name = "headroom-dsp"
+description = "automatic loudness and per-app volume control (pipewire)"
+version.workspace = true
+edition.workspace = true
+license = "MPL-2.0"
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[dependencies]
+# intentionally empty: must build clean on any host, most reusable crate in the workspace.
+# think twice before adding a dependency here.
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[features]
+default = []
+
+[[bench]]
+name = "layer_a"
+harness = false
