@@ -170,6 +170,13 @@ schemas. `args` is omitted from the request when its schema is empty.
 | `per-app.reset`    | `{ node_id: u32 }`                            | `null`                       |
 | `subscribe`        | `{ topics: string[] }`                        | `{ subscribed: string[] }`   |
 | `unsubscribe`      | `{ topics: string[] }`                        | `{ unsubscribed: string[] }` |
+| `hello`            | `{ protocol: u32 }`                           | `HelloData`                  |
+
+`hello` is an optional client→server handshake announcing the client's
+protocol version; the daemon logs a warning on mismatch but still serves
+the connection (advisory), and replies with its own `HelloData`. Clients
+that never send it are not validated. The reference client sends it
+automatically right after receiving the server's `hello` event.
 
 `per-app.set` / `per-app.master` persist to the user overlay (an
 enable/disable override layered on the active profile's `[per_app]`).
@@ -318,11 +325,16 @@ Message-level errors leave the connection open.
 
    This event is **not** gated on subscription — every client gets it.
 
-2. Client sends requests; server replies. Client may `subscribe` to
+2. Client MAY send a `hello` op announcing its own protocol version (the
+   reference client does this automatically). The daemon logs a warning
+   on mismatch but still serves the connection, and replies with its
+   `HelloData`. Clients that skip it are not validated.
+
+3. Client sends requests; server replies. Client may `subscribe` to
    topics at any time and will start receiving events for those
    topics.
 
-3. Either side may close the socket at any time. The server cleans up
+4. Either side may close the socket at any time. The server cleans up
    subscription state. Outstanding requests are dropped (no response).
 
 There is no formal `bye`. Closing the socket is the protocol.
@@ -338,13 +350,14 @@ The protocol uses a single integer version number, currently `1`.
   fields on objects they receive and MUST be tolerant of new event
   topics they did not subscribe to (they should never see those, but
   belt and braces).
-- **Removals or semantic changes** bump the protocol version. The
-  daemon may reject connections from clients that declare incompatible
-  versions (TBD: client may include `Hello` request with declared
-  version; not yet specified).
+- **Removals or semantic changes** bump the protocol version. A client
+  may declare its version with the `hello` op; the daemon logs a warning
+  on mismatch but currently still serves the connection (advisory — it
+  does not reject).
 
-Clients SHOULD log a warning if the `protocol` value in `hello` does
-not match the version they were built against, and proceed.
+Clients SHOULD log a warning if the `protocol` value in the server's
+`hello` event does not match the version they were built against, and
+proceed.
 
 ---
 
