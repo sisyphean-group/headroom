@@ -168,6 +168,8 @@ pub struct RoutingState {
     /// slow AGC controller, so a rebuild can rebind it. shared with the
     /// AGC timer in `runtime`; the main loop serialises borrow_mut.
     agc_controller: Option<Rc<RefCell<crate::agc::AgcController>>>,
+    /// throttles tap format-error logs off the 5 ms drain
+    layer_a_drain_count: u64,
 }
 
 /// per-stream Layer A bundle: tap + controller + measurement consumer.
@@ -190,6 +192,8 @@ struct ManagedStream {
     #[allow(dead_code)]
     links: Vec<Link>,
     app_label: String,
+    /// last tap format-error total logged for this stream
+    last_logged_format_errors: u64,
 }
 
 impl RoutingState {
@@ -223,6 +227,7 @@ impl RoutingState {
             real_sink_format_listener: None,
             bus_filter: None,
             agc_controller: None,
+            layer_a_drain_count: 0,
         }
     }
 
@@ -1080,6 +1085,7 @@ impl RoutingState {
                 node_listener,
                 links: Vec::new(),
                 app_label: app_label.to_owned(),
+                last_logged_format_errors: 0,
             },
         );
         tracing::info!(node_id, app = app_label, "Layer A tap spawned");
@@ -1227,6 +1233,11 @@ impl RoutingState {
     pub fn drain_layer_a(&mut self, back: &Rc<RefCell<Self>>) {
         self.attempt_pending_links();
 
+        // 5 ms drain cadence -> about 1 hz
+        const FORMAT_ERR_LOG_EVERY: u64 = 200;
+        self.layer_a_drain_count = self.layer_a_drain_count.wrapping_add(1);
+        let log_format_errors = self.layer_a_drain_count % FORMAT_ERR_LOG_EVERY == 0;
+
         // collect meter events to emit after the iter_mut borrow drops
         // (broadcaster is behind the daemon mutex; avoid nested borrows).
         let mut meters: Vec<(u32, String, f32, f32)> = Vec::new();
@@ -1268,6 +1279,21 @@ impl RoutingState {
                         volume_lin,
                         managed.controller.smoothed_reduction_db(),
                     ));
+                }
+            }
+
+            if log_format_errors {
+                let total = managed.tap.format_error_count();
+                let new = total.saturating_sub(managed.last_logged_format_errors);
+                if new > 0 {
+                    managed.last_logged_format_errors = total;
+                    tracing::warn!(
+                        source = source_node_id,
+                        app = %managed.app_label,
+                        new_format_errors = new,
+                        total_format_errors = total,
+                        "Layer A tap skipped short/misaligned audio buffer(s)"
+                    );
                 }
             }
 
@@ -1825,6 +1851,7 @@ fn install_param_listener(
             let Some(new_volume) = extract_channel_volume(param) else {
                 return;
             };
+            // same re-entrancy invariant as the metadata listener
             let mut state = back.borrow_mut();
             let Some(managed) = state.managed_streams.get_mut(&source_node_id) else {
                 return;
