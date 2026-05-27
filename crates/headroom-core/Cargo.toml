@@ -1,0 +1,55 @@
+[package]
+name = "headroom-core"
+description = "automatic loudness and per-app volume control (pipewire)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+headroom-dsp = { workspace = true }
+headroom-ipc = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+crossbeam-channel = { workspace = true }
+parking_lot = { workspace = true }
+signal-hook = { workspace = true }
+nix = { workspace = true }
+
+pipewire = { workspace = true }
+libspa     = { workspace = true }
+libspa-sys = { workspace = true }
+# own crate: headroom-core forbids unsafe, pipewire-rs 0.8 has no `Filter` API
+pipewire-filter = { workspace = true }
+
+rtrb     = { workspace = true }
+bytemuck = { workspace = true }
+# basedrop = { workspace = true }
+
+notify = { workspace = true }
+notify-debouncer-mini = { workspace = true }
+
+ebur128 = { workspace = true }
+
+# debug: panics on alloc inside `assert_no_alloc!`; release: no-op. wraps each `process` callback
+assert_no_alloc = { workspace = true }
+
+# tracing-journald = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+headroom-client = { workspace = true }
+
+[features]
+default = []
+
+[[bench]]
+name = "app_level"
+harness = false

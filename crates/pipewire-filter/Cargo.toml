@@ -1,0 +1,19 @@
+[package]
+name = "pipewire-filter"
+description = "automatic loudness and per-app volume control (pipewire)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+# pipewire-rs 0.8 has no safe `pw_filter` wrapper + headroom-core
+# forbids unsafe; the unsafe FFI lives here.
+
+[dependencies]
+pipewire     = { workspace = true }
+pipewire-sys = { workspace = true }
+libspa       = { workspace = true }
+libspa-sys   = { workspace = true }
+thiserror    = { workspace = true }
