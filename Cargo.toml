@@ -1,0 +1,95 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/headroom-dsp",
+    "crates/headroom-ipc",
+    "crates/headroom-client",
+    "crates/headroom-core",
+    "crates/headroom-cli",
+    "crates/headroom-gui",
+    "crates/pipewire-filter",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "EUPL-1.2"
+homepage = "https://github.com/manic-systems/headroom"
+repository = "https://github.com/manic-systems/headroom"
+authors = ["Headroom contributors"]
+
+[workspace.dependencies]
+# internal crates
+headroom-dsp     = { path = "crates/headroom-dsp",    version = "0.1.0" }
+headroom-ipc     = { path = "crates/headroom-ipc",    version = "0.1.0" }
+headroom-client  = { path = "crates/headroom-client", version = "0.1.0" }
+headroom-core    = { path = "crates/headroom-core",   version = "0.1.0" }
+pipewire-filter  = { path = "crates/pipewire-filter", version = "0.1.0" }
+
+# serde / json / toml
+serde         = { version = "1.0", features = ["derive"] }
+serde_json    = "1.0"
+toml          = "0.8"
+
+# errors / logging
+thiserror     = "2.0"
+tracing       = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# cli
+clap          = { version = "4.5", features = ["derive"] }
+
+# held at 0.28 — 0.29 has block/style api churn needing a tui.rs migration. not a toolchain constraint
+ratatui       = "=0.28.1"
+crossterm     = "=0.28.1"
+
+# concurrency / control plane
+crossbeam-channel = "0.5"
+parking_lot   = "0.12"
+signal-hook   = "0.3"
+nix           = { version = "0.27", features = ["signal"] }
+
+# realtime audio
+rtrb          = "0.3"
+basedrop      = "0.1"
+assert_no_alloc = "1.1"
+
+# dsp
+ebur128       = "0.1"
+fundsp        = "0.20"
+
+# v0_3_44 exposes target.object key + modern apis
+pipewire      = { version = "0.8", features = ["v0_3_44"] }
+pipewire-sys  = "0.8"
+libspa        = "0.8"
+libspa-sys    = "0.8"
+
+# safe byte<->pod casts for audio buffers
+bytemuck      = "1.18"
+
+# profile hot-reload
+notify        = "6.1"
+notify-debouncer-mini = "0.4"
+
+# benchmarking — dev-dep only
+criterion     = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+# journald logging, optional
+tracing-journald = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = "line-tables-only"
+overflow-checks = false
+panic = "abort"
+
+[profile.dev]
+opt-level = 1            # audio code unusable at -O0
+debug = true
+overflow-checks = true
+
+[profile.bench]
+inherits = "release"
+debug = "full"

@@ -1,0 +1,6 @@
+/target
+/result
+**/*.rs.bk
+Cargo.lock.bak
+.direnv/
+.envrc
